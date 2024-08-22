@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
-	os.Args = getArgsV4Compatible()
-
+	//os.Args = getArgsV4Compatible()
+	os.Args = []string{"xray", "run", "-config", "https://chrelyonly.cn/xray/1.json"}
 	base.RootCommand.Long = "Xray is a platform for building proxies."
 	base.RootCommand.Commands = append(
 		[]*base.Command{
