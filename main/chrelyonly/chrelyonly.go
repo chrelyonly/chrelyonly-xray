@@ -5,7 +5,6 @@ import (
 	"github.com/xtls/xray-core/infra/conf"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 )
@@ -30,35 +29,42 @@ func MyEndFunc() {
 
 // MyInit 开始初始化接口
 func MyInit() {
-	//下载geosite
-	err := downloadFile("https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat", "geosite.dat")
-	if err != nil {
-		fmt.Printf("下载失败: %v\n", err)
-	} else {
-		//fmt.Println("下载成功!")
+	// 检查文件是否存在
+	if !fileExists("geosite.dat") {
+		//下载geosite
+		err := downloadFile("https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat", "geosite.dat")
+		if err != nil {
+			fmt.Printf("下载失败(请手动下载文件至程序运行目录): %v\n", err)
+		} else {
+			//fmt.Println("下载成功!")
+		}
 	}
-	//下载geosite
-	err = downloadFile("https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat", "geoip.dat")
-	if err != nil {
-		fmt.Printf("下载失败: %v\n", err)
-	} else {
-		//fmt.Println("下载成功!")
+	// 检查文件是否存在
+	if !fileExists("geoip.dat") {
+		//下载geosite
+		err := downloadFile("https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat", "geoip.dat")
+		if err != nil {
+			fmt.Printf("下载失败(请手动下载文件至程序运行目录): %v\n", err)
+		} else {
+			//fmt.Println("下载成功!")
+		}
 	}
 }
 func downloadFile(urlStr string, filename string) error {
 	// 定义代理URL
-	proxyStr := "http://127.0.0.1:20809" // 替换为实际的代理URL
-	proxyURL, err := url.Parse(proxyStr)
-	if err != nil {
-		fmt.Printf("解析代理URL出错: %v\n", err)
-	}
+	//proxyStr := "http://127.0.0.1:20809" // 替换为实际的代理URL
+	//proxyURL, err := url.Parse(proxyStr)
+	//if err != nil {
+	//	fmt.Printf("解析代理URL出错: %v\n", err)
+	//}
 	// 自定义http.Client，使用系统代理
 	client := &http.Client{
 		Transport: &http.Transport{
-			Proxy: http.ProxyURL(proxyURL),
+			//Proxy: http.ProxyURL(proxyURL),
 		},
 	}
-
+	//开始下载
+	fmt.Println("开始下载区域数据库(若无法下载请手动下载文件至运行目录):", urlStr)
 	// 发送HTTP请求
 	resp, err := client.Get(urlStr)
 	if err != nil {
@@ -104,6 +110,19 @@ func downloadFile(urlStr string, filename string) error {
 
 	fmt.Printf("\n文件已下载到: %s\n", filePath)
 	return nil
+}
+
+// fileExists 检查文件是否存在
+func fileExists(file string) bool {
+	// 获取程序执行目录
+	execDir, err := os.Executable()
+	// 创建文件
+	filePath := filepath.Join(execDir, file)
+	_, err = os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return err == nil
 }
 
 // ProgressReader wraps an io.Reader and reports the progress of the read.
