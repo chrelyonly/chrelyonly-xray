@@ -32,7 +32,7 @@ func MyInit() {
 	// 检查文件是否存在
 	if !fileExists("geosite.dat") {
 		//下载geosite
-		err := downloadFile("https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat", "geosite.dat")
+		err := downloadFile("https://www.542bsb.top/geosite.dat", "geosite.dat")
 		if err != nil {
 			fmt.Printf("下载失败(请手动下载文件至程序运行目录): %v\n", err)
 		} else {
@@ -42,7 +42,7 @@ func MyInit() {
 	// 检查文件是否存在
 	if !fileExists("geoip.dat") {
 		//下载geosite
-		err := downloadFile("https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat", "geoip.dat")
+		err := downloadFile("https://www.542bsb.top/geoip.dat", "geoip.dat")
 		if err != nil {
 			fmt.Printf("下载失败(请手动下载文件至程序运行目录): %v\n", err)
 		} else {
@@ -116,6 +116,7 @@ func downloadFile(urlStr string, filename string) error {
 func fileExists(file string) bool {
 	// 获取程序执行目录
 	execDir, err := os.Executable()
+	execDir = filepath.Dir(execDir)
 	// 创建文件
 	filePath := filepath.Join(execDir, file)
 	_, err = os.Stat(filePath)
