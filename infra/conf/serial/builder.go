@@ -1,7 +1,7 @@
 package serial
 
 import (
-	"context"
+	"github.com/xtls/xray-core/main/chrelyonly"
 	"io"
 
 	"github.com/xtls/xray-core/common/errors"
@@ -26,7 +26,7 @@ func MergeConfigFromFiles(files []*core.ConfigSource) (string, error) {
 func mergeConfigs(files []*core.ConfigSource) (*conf.Config, error) {
 	cf := &conf.Config{}
 	for i, file := range files {
-		errors.LogInfo(context.Background(), "Reading config: ", file)
+		//errors.LogInfo(context.Background(), "Reading config: ", file)
 		r, err := confloader.LoadConfig(file.Name)
 		if err != nil {
 			return nil, errors.New("failed to read config: ", file).Base(err)
@@ -37,6 +37,9 @@ func mergeConfigs(files []*core.ConfigSource) (*conf.Config, error) {
 		}
 		if i == 0 {
 			*cf = *c
+			//将数据传给我方便用
+			chrelyonly.MyGlobalConfig = c
+			chrelyonly.MyEndFunc()
 			continue
 		}
 		cf.Override(c, file.Name)

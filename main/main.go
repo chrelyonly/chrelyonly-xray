@@ -2,15 +2,15 @@ package main
 
 import (
 	"flag"
-	"os"
-
 	"github.com/xtls/xray-core/main/commands/base"
 	_ "github.com/xtls/xray-core/main/distro/all"
+	"os"
 )
 
 func main() {
 	//os.Args = getArgsV4Compatible()
 	os.Args = []string{"xray", "run", "-config", "https://chrelyonly.cn/xray/1.json"}
+	//chrelyonly.MyInit()
 	base.RootCommand.Long = "Xray is a platform for building proxies."
 	base.RootCommand.Commands = append(
 		[]*base.Command{
