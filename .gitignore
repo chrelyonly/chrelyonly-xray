@@ -28,3 +28,4 @@ errorgen
 *.dat
 .vscode
 /build_assets
+/build
