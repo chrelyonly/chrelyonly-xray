@@ -29,3 +29,6 @@ errorgen
 .vscode
 /build_assets
 /build
+
+# Output from dlv test
+**/debug.*

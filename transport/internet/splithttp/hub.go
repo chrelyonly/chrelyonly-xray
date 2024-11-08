@@ -13,12 +13,14 @@ import (
 
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
+	goreality "github.com/xtls/reality"
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/errors"
 	"github.com/xtls/xray-core/common/net"
 	http_proto "github.com/xtls/xray-core/common/protocol/http"
 	"github.com/xtls/xray-core/common/signal/done"
 	"github.com/xtls/xray-core/transport/internet"
+	"github.com/xtls/xray-core/transport/internet/reality"
 	"github.com/xtls/xray-core/transport/internet/stat"
 	v2tls "github.com/xtls/xray-core/transport/internet/tls"
 	"golang.org/x/net/http2"
@@ -196,14 +198,6 @@ func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		h.config.WriteResponseHeader(writer)
 
 		writer.WriteHeader(http.StatusOK)
-		if _, ok := request.URL.Query()["x_padding"]; !ok {
-			// in earlier versions, this initial body data was used to immediately
-			// start a 200 OK on all CDN. but xray client since 1.8.16 does not
-			// actually require an immediate 200 OK, but now requires these
-			// additional bytes "ok". xray client 1.8.24+ doesn't require "ok"
-			// anymore, and so this line should be removed in later versions.
-			writer.Write([]byte("ok"))
-		}
 
 		responseFlusher.Flush()
 
@@ -222,8 +216,12 @@ func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		h.ln.addConn(stat.Connection(&conn))
 
 		// "A ResponseWriter may not be used after [Handler.ServeHTTP] has returned."
-		<-downloadDone.Wait()
+		select {
+		case <-request.Context().Done():
+		case <-downloadDone.Wait():
+		}
 
+		conn.Close()
 	} else {
 		writer.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -348,6 +346,10 @@ func ListenSH(ctx context.Context, address net.Address, port net.Port, streamSet
 			}
 		}
 
+		if config := reality.ConfigFromStreamSettings(streamSettings); config != nil {
+			listener = goreality.NewListener(listener, config.GetREALITYConfig())
+		}
+
 		// h2cHandler can handle both plaintext HTTP/1.1 and h2c
 		h2cHandler := h2c.NewHandler(handler, &http2.Server{})
 		l.listener = listener
@@ -369,7 +371,13 @@ func ListenSH(ctx context.Context, address net.Address, port net.Port, streamSet
 
 // Addr implements net.Listener.Addr().
 func (ln *Listener) Addr() net.Addr {
-	return ln.listener.Addr()
+	if ln.h3listener != nil {
+		return ln.h3listener.Addr()
+	}
+	if ln.listener != nil {
+		return ln.listener.Addr()
+	}
+	return nil
 }
 
 // Close implements net.Listener.Close().
